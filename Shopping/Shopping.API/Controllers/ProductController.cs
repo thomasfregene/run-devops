@@ -1,11 +1,13 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using MongoDB.Driver;
 using Shopping.API.Data;
 using Shopping.API.Models;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Shopping.API.Controllers
 {
@@ -14,20 +16,32 @@ namespace Shopping.API.Controllers
     public class ProductController : ControllerBase
     {
         private readonly ILogger<ProductController> _logger;
+        private readonly ProductContext _productContext;
 
-        public ProductController(ILogger<ProductController> logger)
+        public ProductController(ILogger<ProductController> logger, ProductContext productContext)
         {
             _logger = logger;
+            _productContext = productContext;
         }
+
         [HttpGet]
-        public IEnumerable<Product> Get()
+        public async Task<IEnumerable<Product>> Get()
         {
-            return ProductContext.Products;
-            //var rnd = new Random();
-            //return Enumerable.Range(1,5).Select(index=>new Product
-            //{
-            //    Name = "asd"
-            //}).ToArray();
+            var result = new List<Product>();
+            try
+            {
+               result = await _productContext
+              .Products
+              .Find(p => true)
+              .ToListAsync();
+            }
+            catch (Exception ex)
+            {
+
+                _logger.LogError(ex.Message);
+            }
+
+            return result;
         }
     }
 }
